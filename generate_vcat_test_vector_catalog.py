@@ -11,21 +11,25 @@ CATALOG_KEY = "manifest_catalog.json"
 s3 = boto3.client("s3")
 
 def download_and_hash_manifest(s3_key):
-    tmp = tempfile.NamedTemporaryFile(delete=False)
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        tmp_path = tmp.name
+
+    # Download using boto3
+    s3.download_file(S3_BUCKET, s3_key, tmp_path)
+
+    # Now read the downloaded file
+    with open(tmp_path, "rb") as f:
+        data = f.read()
+
+    os.remove(tmp_path)
+
     try:
-        s3.download_file(S3_BUCKET, s3_key, tmp.name)
-        with open(tmp.name, "rb") as f:
-            data = f.read()
-            sha256 = hashlib.sha256(data).hexdigest()
-            try:
-                parsed = json.loads(data)
-            except Exception as e:
-                print(f"❌ Error parsing {s3_key}: {e}")
-                return None, None
-            return parsed, sha256
-    finally:
-        tmp.close()
-        os.remove(tmp.name)
+        parsed = json.loads(data)
+        sha256 = hashlib.sha256(data).hexdigest()
+        return parsed, sha256
+    except Exception as e:
+        print(f"❌ Error parsing {s3_key}: {e}")
+        return None, None
 
 def build_catalog():
     print(f"📦 Scanning s3://{S3_BUCKET}/{MANIFEST_PREFIX}")
@@ -33,7 +37,7 @@ def build_catalog():
     pages = paginator.paginate(Bucket=S3_BUCKET, Prefix=MANIFEST_PREFIX)
 
     catalog = {
-        "catalog_version": 1,
+        "vcat_test_vector_catalog_version": 1,
         "manifests": []
     }
 

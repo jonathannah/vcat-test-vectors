@@ -3,6 +3,7 @@ import json
 import hashlib
 import requests
 from pathlib import Path
+from collections import OrderedDict
 
 S3_BUCKET = "roncatech-vcat-test-vectors"
 CATALOG_KEY = "manifest_catalog.json"
@@ -15,7 +16,21 @@ def fetch_catalog():
     local_path = Path("/tmp/manifest_catalog.json")
     s3.download_file(S3_BUCKET, CATALOG_KEY, str(local_path))
     with open(local_path, "r") as f:
-        return json.load(f)
+        try:
+            # Use OrderedDict to preserve key order
+            raw_text = f.read()
+            parsed = json.loads(raw_text, object_pairs_hook=OrderedDict)
+        except Exception as e:
+            print(f"❌ Failed to parse catalog JSON: {e}")
+            exit(1)
+
+    # Ensure first key is "vcat_test_vector_catalog_version"
+    first_key = next(iter(parsed), None)
+    if first_key != "vcat_test_vector_catalog_version":
+        print(f"❌ Invalid catalog: first key must be 'vcat_test_vector_catalog_version', found '{first_key}'")
+        exit(1)
+
+    return parsed
 
 
 def validate_entry(entry):
@@ -40,7 +55,7 @@ def validate_entry(entry):
     try:
         parsed = json.loads(content)
         if "vcat-test-vector" not in parsed:
-            print("❌ Missing 'vcat-test-vector' key")
+            print("❌ Manifest missing 'vcat-test-vector' key")
             return False
     except Exception as e:
         print(f"❌ JSON parse error: {e}")
