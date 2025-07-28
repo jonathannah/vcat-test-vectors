@@ -22,7 +22,7 @@ def validate_manifest_from_s3(key):
     obj = s3.get_object(Bucket=S3_BUCKET, Key=key)
     manifest = json.load(obj["Body"])
 
-    vector = manifest.get("vcat-test-vector")
+    vector = manifest.get("vcat_testvector_header")
     if not vector:
         print("❌ Invalid format: missing 'vcat-test-vector'")
         return

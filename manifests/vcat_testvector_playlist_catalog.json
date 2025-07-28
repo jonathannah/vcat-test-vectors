@@ -1,0 +1,75 @@
+{
+    "vcat_testvector_header": {
+        "name": "VCAT Demo Test Assets",
+        "uuid": "4e30e695-6c14-4281-a99c-b7e0d2b1fed9",
+        "description": "A collection of VCAT playlists",
+        "created_at": "2025-07-25 16:29:33",
+        "created_by": "RoncaTech, LLC"
+    },
+    "playlists": [
+        {
+            "name": "av1-1280X720p29.97-fd2",
+            "url": "https://roncatech-vcat-test-vectors.s3.amazonaws.com/manifests/av1-1280X720p29.97-fd2_playlist.json",
+            "checksum": "9f1d68a43d62719e881a87fedc3a9c18acdb1790442b28f8f5b31de5757019b7",
+            "length_bytes": 825,
+            "uuid": "83fed5d3-4ef7-4fe3-bac1-d2c794cfabb6",
+            "description": "Playlist video: VCAT Test asset: video/av1, 1280X720, 29.97fps, 600030ms"
+        },
+        {
+            "name": "av1-1920X1080p29.97-fd2",
+            "url": "https://roncatech-vcat-test-vectors.s3.amazonaws.com/manifests/av1-1920X1080p29.97-fd2_playlist.json",
+            "checksum": "de52a5547b801af0fccefd61d022389e4b23b98ca87e48755b8ef26a4cd47a70",
+            "length_bytes": 830,
+            "uuid": "3b4da59e-5ecb-4215-a77d-03742e38a402",
+            "description": "Playlist video: VCAT Test asset: video/av1, 1920X1080, 29.97fps, 360030ms"
+        },
+        {
+            "name": "av1-640X360p29.97-fd2",
+            "url": "https://roncatech-vcat-test-vectors.s3.amazonaws.com/manifests/av1-640X360p29.97-fd2_playlist.json",
+            "checksum": "e012dd3bd8b33e90a990cf9d2b9f9e3e8d71509cd50535a6407f094e51e9bab9",
+            "length_bytes": 821,
+            "uuid": "5a6114b1-33be-4853-85a3-0f2ae29a79b5",
+            "description": "Playlist video: VCAT Test asset: video/av1, 640X360, 29.97fps, 900900ms"
+        },
+        {
+            "name": "av1-960X540p29.97-fd2",
+            "url": "https://roncatech-vcat-test-vectors.s3.amazonaws.com/manifests/av1-960X540p29.97-fd2_playlist.json",
+            "checksum": "b3a18c590cb8d7f443f366323b38b78fb606f06a8506e87e90ff4ac45f66459e",
+            "length_bytes": 821,
+            "uuid": "5c380761-18b3-4a44-83bf-383c8ca3ba62",
+            "description": "Playlist video: VCAT Test asset: video/av1, 960X540, 29.97fps, 900900ms"
+        },
+        {
+            "name": "vp9-1280X720p29.97",
+            "url": "https://roncatech-vcat-test-vectors.s3.amazonaws.com/manifests/vp9-1280X720p29.97_playlist.json",
+            "checksum": "1f4567888e157ce8e27ab3e8f806e3145850c777eb1e3afd7e3387adc416dd69",
+            "length_bytes": 848,
+            "uuid": "a400e39f-4b84-489a-a2da-4a7d2469b411",
+            "description": "Playlist video: VCAT Test asset: video/mp4; codecs=\"vp09\", 1280X720, 29.97fps, 720020ms"
+        },
+        {
+            "name": "vp9-1920X1080p29.97",
+            "url": "https://roncatech-vcat-test-vectors.s3.amazonaws.com/manifests/vp9-1920X1080p29.97_playlist.json",
+            "checksum": "c406951c90a4cbf361362f73e404100a0c78124b0af572059b05e82db6d66008",
+            "length_bytes": 853,
+            "uuid": "9a013fe5-2c9b-4c0d-be9d-78d13a60ee01",
+            "description": "Playlist video: VCAT Test asset: video/mp4; codecs=\"vp09\", 1920X1080, 29.97fps, 720720ms"
+        },
+        {
+            "name": "vp9-640X360p29.97",
+            "url": "https://roncatech-vcat-test-vectors.s3.amazonaws.com/manifests/vp9-640X360p29.97_playlist.json",
+            "checksum": "23286e0b597390d6f175580c19c6e3b14085d94cdae1e28a59b13625013c3438",
+            "length_bytes": 843,
+            "uuid": "430c125f-63db-45c4-bdb4-93df542697ee",
+            "description": "Playlist video: VCAT Test asset: video/mp4; codecs=\"vp09\", 640X360, 29.97fps, 900900ms"
+        },
+        {
+            "name": "vp9-960X540p29.97",
+            "url": "https://roncatech-vcat-test-vectors.s3.amazonaws.com/manifests/vp9-960X540p29.97_playlist.json",
+            "checksum": "be37d30d54144d129dac572982176a2d94257d98b751c240a5933a28c4a79f0d",
+            "length_bytes": 843,
+            "uuid": "34a1f227-ff06-4b1e-9ff3-0442f763d2ce",
+            "description": "Playlist video: VCAT Test asset: video/mp4; codecs=\"vp09\", 960X540, 29.97fps, 900900ms"
+        }
+    ]
+}
