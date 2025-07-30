@@ -78,7 +78,7 @@ def process_playlist_manifest(manifest_file: str, bucket_url: str):
     # Create the playlist asset
     playlist_asset = VcatTestVectorPlaylistAsset(
         name=playlist_name,
-        url=f"https://{bucket_name}.s3.amazonaws.com/{file_path}",  # URL for the playlist file
+        url=f"{file_path}",  # URL for the playlist file
         checksum=playlist_checksum,  # Checksum for the playlist manifest
         uuid=playlist_uuid,
         length_bytes=playlist_length,

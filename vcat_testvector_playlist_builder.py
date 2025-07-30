@@ -86,8 +86,10 @@ def generate_playlist_from_video_manifest(manifest_file: str, bucket_url: str):
     temp_file = getTempCopyFromS3(f"{bucket_url}/{file_path}")
     video_manifest_checksum = getChecksum(temp_file)  # Calculate checksum for the video manifest
 
+    video_manifest_basename = os.path.basename(file_path)
+
     # The URL for the playlist asset is simply the URL from S3 used to fetch the manifest
-    media_asset_url = f"https://{bucket_name}.s3.amazonaws.com/{file_path}"
+    media_asset_url = f"../manifests/{video_manifest_basename}"
 
     # Create the playlist asset
     media_asset = VcatTestVectorPlaylistAsset(

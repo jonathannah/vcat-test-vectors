@@ -124,7 +124,7 @@ def generate_video_manifest(video_file, bucket_url, created_by):
     resolution_x_y = "1234X5678"
 
     # manifest URL
-    video_url = f"{vector_url}/{video_file}"
+    video_url = f"../{video_file}"
 
     # download URL
     s3_url = f"{bucket_url}/{video_file}"
