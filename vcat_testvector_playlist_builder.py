@@ -1,143 +1,84 @@
+#!/usr/bin/env python3
 import json
-import os
-from copy import deepcopy
-
-import boto3
-from vcat_testvector_datamodels import (VcatTestVectorPlaylistAsset,
-                                        VcatTestVectorPlaylistManifest,
-                                        VcatTestVectorHeader)
-from utils import getTempCopyFromS3, getChecksum
+from pathlib import Path
 from typing import List
 
+import settings as cfg
+from vcat_testvector_datamodels import (
+    VcatTestVectorPlaylistAsset,
+    VcatTestVectorPlaylistManifest,
+    VcatTestVectorHeader
+)
+from utils import getChecksum
 
-# Initialize the S3 client
-s3_client = boto3.client('s3')
-
-# Bucket URL and directory where video manifests are stored
-bucket_url = "s3://roncatech-vcat-test-vectors"
-manifests_dir = "manifests"
-
-
-def get_video_manifests(bucket_url: str) -> List[str]:
+def get_video_manifests_local() -> List[Path]:
     """
-    Scan the S3 bucket for all video manifest files.
+    Return all *_video_manifest.json files under cfg.MANIFEST_DIR
     """
-    # Parse the bucket URL
-    if not bucket_url.startswith("s3://"):
-        raise ValueError("The URL must start with 's3://'")
-
-    parts = bucket_url[5:].split("/", 1)
-    bucket_name = parts[0]
-    prefix = f"{manifests_dir}/"
-
-    # List objects in the bucket (filtering for manifest files)
-    paginator = s3_client.get_paginator('list_objects_v2')
-    video_manifests = []
-
-    for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
-        if "Contents" in page:
-            for obj in page["Contents"]:
-                file_name = obj["Key"]
-                if file_name.endswith("_video_manifest.json"):  # Look for video manifests
-                    video_manifests.append(file_name)
-
-    return video_manifests
+    return list(cfg.MANIFEST_DIR.glob("*_video_manifest.json"))
 
 
-def generate_playlist_from_video_manifest(manifest_file: str, bucket_url: str):
+def generate_playlist_from_video_manifest(manifest_path: Path):
     """
-    Generates a playlist manifest based on a video manifest.
+    Read one video manifest JSON from disk, produce a one‑entry playlist
+    manifest, and write it back into the same folder.
     """
-    # Extract the bucket and file path from the URL
-    bucket_name = bucket_url[5:].split("/")[0]  # Extract bucket name
-    file_path = manifest_file  # Full path to the video manifest in the 'manifests' folder
+    # 1) Load the video manifest JSON
+    with manifest_path.open("r") as f:
+        video_manifest = json.load(f)
 
-    # Log the file path to ensure correctness
-    print(f"Fetching manifest from S3: Bucket: {bucket_name}, Key: {file_path}")
+    header = video_manifest["vcat_testvector_header"]
+    ma     = video_manifest["media_asset"]
 
-    try:
-        # Get the video manifest from S3
-        manifest_obj = s3_client.get_object(Bucket=bucket_name, Key=file_path)
-        video_manifest = json.loads(manifest_obj['Body'].read())
-    except s3_client.exceptions.NoSuchKey as e:
-        print(f"Error: The file '{file_path}' was not found in the bucket '{bucket_name}'. Please verify the path.")
+    # 2) Sanity check
+    if "video_mime_type" not in ma:
+        print(f"  → skipping {manifest_path.name}, not a video manifest")
         return
 
-    # Extract necessary details from the video manifest
-    media_asset = video_manifest['media_asset']
+    # 3) Compute checksum of the video‑manifest file itself
+    manifest_checksum = getChecksum(str(manifest_path))
 
-    # Check if it's a valid video manifest
-    if 'video_mime_type' not in media_asset:
-        print(f"Skipping {manifest_file}, not a valid video manifest")
-        return
-
-    video_name = video_manifest["vcat_testvector_header"]["name"]
-    video_description = video_manifest["vcat_testvector_header"]["description"]
-    video_uuid = video_manifest["vcat_testvector_header"]["uuid"]
-    video_mime_type = media_asset["video_mime_type"]
-    resolution_x_y = media_asset["resolution_x_y"]
-
-    # Create playlist description (replace "VCAT sample test vector" with "VCAT sample playlist")
-    playlist_description = "Playlist video: "+ video_description
-
-    # Create playlist item using VcatTestVectorPlaylistAsset
-    # Now we calculate the checksum of the video manifest itself
-    # First, download the manifest from S3 to a temporary local file
-    temp_file = getTempCopyFromS3(f"{bucket_url}/{file_path}")
-    video_manifest_checksum = getChecksum(temp_file)  # Calculate checksum for the video manifest
-
-    video_manifest_basename = os.path.basename(file_path)
-
-    # The URL for the playlist asset is simply the URL from S3 used to fetch the manifest
-    media_asset_url = f"../manifests/{video_manifest_basename}"
-
-    # Create the playlist asset
-    media_asset = VcatTestVectorPlaylistAsset(
-        name=video_name,
-        url=media_asset_url,  # URL points to the video manifest (not video file)
-        checksum=video_manifest_checksum,  # Use the checksum of the video manifest
-        length_bytes=media_asset["length_bytes"],
-        uuid=video_uuid,
-        description=video_description
+    # 4) Build the playlist asset
+    #    URL is just the manifest filename (relative to same dir)
+    asset_url = f"../manifests/{manifest_path.name}"
+    playlist_asset = VcatTestVectorPlaylistAsset(
+        name        = header["name"],
+        url         = asset_url,
+        checksum    = manifest_checksum,
+        length_bytes= ma["length_bytes"],
+        uuid        = header["uuid"],
+        description = header["description"]
     )
 
-    # Create the playlist manifest using the VcatTestVectorPlaylistManifest
+    # 5) Build the playlist header
+    playlist_header = VcatTestVectorHeader(
+        name        = header["name"] + "_playlist",
+        description = f"Playlist for {header['name']}",
+        created_by  = header["created_by"]
+    )
+
+    # 6) Assemble the playlist manifest object
     playlist_manifest = VcatTestVectorPlaylistManifest(
-        vcat_testvector_header=VcatTestVectorHeader(
-            name=video_name,
-            description=playlist_description,
-            created_by="RoncaTech, LLC"
-        ),
-        media_assets=[media_asset]
+        vcat_testvector_header = playlist_header,
+        media_assets           = [playlist_asset]
     )
 
-    # Ensure the './manifests' directory exists, create it if necessary
-    output_dir = './manifests'
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    # 7) Write it back out alongside the video manifests
+    out_name   = f"{playlist_header.name}.json"
+    out_path   = cfg.MANIFEST_DIR / out_name
+    with out_path.open("w") as out:
+        json.dump(playlist_manifest.to_dict(), out, indent=2)
 
-    # Clean the filename by removing the path, keeping only the filename
-    clean_video_file_name = video_name.split('/')[-1]  # Strip path and keep filename
-
-    # Save the playlist manifest directly inside the './manifests' directory (no subfolders)
-    output_file = os.path.join(output_dir, f"{clean_video_file_name}_playlist.json")
-
-    # Write the JSON to the file
-    with open(output_file, 'w') as json_file:
-        json.dump(playlist_manifest.to_dict(), json_file, indent=4)
-
-    print(f"Playlist for {video_name} saved as {output_file} with uuid = {playlist_manifest.vcat_testvector_header.uuid}")
+    print(f"✔ Wrote playlist {out_name} in {cfg.MANIFEST_DIR}")
 
 
 def main():
-    video_manifests = get_video_manifests(bucket_url)
+    video_manifests = get_video_manifests_local()
+    print(f"Found {len(video_manifests)} video manifest(s) in {cfg.MANIFEST_DIR}\n")
 
-    print(f"Found {len(video_manifests)} video manifests.")
-
-    # Generate a playlist for each video manifest
-    for manifest_file in video_manifests:
-        print(f"Calling generate_playlist_from_video_manifest for: {manifest_file}")
-        generate_playlist_from_video_manifest(manifest_file, bucket_url)
+    for vm in video_manifests:
+        print(f"Generating playlist from {vm.name}…")
+        generate_playlist_from_video_manifest(vm)
 
 
 if __name__ == "__main__":

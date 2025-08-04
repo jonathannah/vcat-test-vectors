@@ -8,6 +8,7 @@ import re  # Import re for regular expressions
 
 import vcat_testvector_datamodels
 from utils import getTempCopyFromS3, getChecksum, getFileLength
+import settings as cfg
 
 
 def get_video_files(bucket_url):
@@ -16,8 +17,8 @@ def get_video_files(bucket_url):
     Assumes that all files in the 'media' folder are video files.
     """
     # Parse the bucket URL to extract the bucket name and prefix
-    if not bucket_url.startswith("s3://"):
-        raise ValueError("The URL must be an S3 URL starting with 's3://'.")
+    if not bucket_url.startswith(cfg.S3_URL):
+        raise ValueError(f"The URL must be an S3 URL starting with '{cfg.S3_URL}'.")
 
     parts = bucket_url[5:].split("/", 1)
     bucket_name = parts[0]
@@ -159,9 +160,10 @@ def generate_video_manifest(video_file, bucket_url, created_by):
             "media_asset": media_asset.to_dict()
         }
 
-        os.makedirs("./manifests", exist_ok=True)
+        outDir = cfg.MANIFEST_DIR
+
         clean_name = video_file.split("/")[-1]
-        out = f"./manifests/{clean_name}_video_manifest.json"
+        out = f"{outDir}/{clean_name}_video_manifest.json"
         with open(out, "w") as f:
             json.dump(test_vector, f, indent=4)
         print(f"✔ Wrote {out}")
