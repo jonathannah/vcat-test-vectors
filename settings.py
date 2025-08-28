@@ -11,7 +11,7 @@ from pathlib import Path
 HOME = Path.home()
 
 # 2) Define your new “base” output folder
-BASE_OUTPUT_DIR = HOME / "Downloads" / "roncatech-vcat-test-vectors"
+BASE_OUTPUT_DIR = HOME / "Downloads" / "roncatech-vcat-test-vectors-vertical"
 
 # 3) Then derive all the sub‐dirs from that
 MANIFEST_DIR  = BASE_OUTPUT_DIR / "manifests"
